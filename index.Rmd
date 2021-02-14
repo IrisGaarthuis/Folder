@@ -5,3 +5,73 @@ date: "10-2-2021"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+library(spotifyr)
+install.packages("ggthemes")
+library(ggthemes)
+```
+```{r}
+romantic_movies <- get_playlist_audio_features("","5mlaU10XgmCTkuqxJCX1bk")
+horror_movies <- get_playlist_audio_features("", "12aylnVBIgblxtIVgofUiz")
+action_movies <- get_playlist_audio_features("", "6Ua5fW3fgV26Vu9b8SxBJA")
+```
+```{r}
+genre <-
+  bind_rows(
+  romantic_movies %>% mutate(category = "romance"),
+  horror_movies %>% mutate(category = "horror"),
+  action_movies %>% mutate(category = "action")
+  )
+```
+
+
+```{r}
+genre %>%
+  ggplot(aes(x = valence)) +
+  geom_histogram(binwidth = 0.1, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_tufte()
+```
+```{r}
+genre %>%
+  ggplot(aes(x = instrumentalness)) +
+  geom_histogram(binwidth = 0.06, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_tufte()
+  
+```
+
+```{r}
+genre %>%
+  ggplot(aes(x = danceability)) +
+  geom_histogram(binwidth = 0.05, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_tufte()
+```
+
+```{r}
+genre %>%
+  ggplot(aes(x = valence, y = energy, color = category)) +
+  geom_point(alpha = 0.5) +
+  scale_x_log10() +
+  theme_bw()
+  
+```
+
+
+
+```{r}
+genre %>%
+  ggplot(aes(x=valence, fill = category)) +
+  geom_histogram(position = "dodge", binwidth = 0.08) +
+  theme_tufte()
+```
+```{r}
+genre %>%
+  ggplot(aes(x = mode, fill = category)) +  # 0 = minor, 1 = major
+  geom_bar(position = "dodge") +
+  scale_x_continuous(breaks = c(0, 1)) +
+  theme_tufte()
+```
+
