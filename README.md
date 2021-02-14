@@ -7,6 +7,13 @@ Some movies from, for example, a comedy genre, will contain music that will typi
 
 Timbral, rhythm and pitch will be different across these genres. I will use these fore genre classification. 
 
+Loudness: seen as a relevant musical feature to express emotions (Juslin & Laukka, 2004)
+Mode: major vs. minor. 
+* happy and tender: mainy major mode. Romantic movies have a lot of these characteristics
+* sadness and fear: mainly minor mode.
+* anger: even distribution
+link between valence and musical mode
+
 # Corpus
 Movies from the last decade
 Number of movies based on number of tracks
