@@ -8,10 +8,11 @@ Some movies from, for example, a comedy genre, will contain music that will typi
 Timbral, rhythm and pitch will be different across these genres. I will use these fore genre classification. 
 
 # Corpus
-Top 10 movies from the last decade
+Movies from the last decade
+Number of movies based on number of tracks
 Only Original Motion Picture Soundtrack albums from spotify
 
-Action movies
+Action movies (221 tracks)
 1)	Atomic blonde
 2)	Baby driver 
 3)	Edge of tomorrow
@@ -22,8 +23,9 @@ Action movies
 8)	Mad max: fury road
 9)	Mission impossible: fallout
 10)	Skyfall
+11) Avengers: end game
 
-Romantic movies
+Romantic movies (242 tracks)
 1)	Eternal sunshine of the spotless mind
 2)	Amélie
 3)	Barfi!
@@ -33,8 +35,13 @@ Romantic movies
 7)	About time
 8)	The notebook
 9)	The fault in our stars
+10) Love actually
+11) Atonement
+12) Silver linings playbook
+13) The theory of everything
+14) The age of adaline
 
-Horror movies
+Horror movies (237 tracks)
 1)	Get out
 2)	The lighthouse
 3)	A quiet place
