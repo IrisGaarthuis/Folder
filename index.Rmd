@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
 ## Computational Musicology
 
 Can I predict film genre, based on the film music playlist of different movies?
@@ -67,8 +68,7 @@ Horror movies (237 tracks)
 7)	Hereditary
 8)	Doctor sleep
 9)	It
----
-```
+
 ```{r}
 library(tidyverse)
 ```
