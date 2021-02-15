@@ -6,3 +6,59 @@ In my analysis, I want to identify the measurable traits of the musical scores (
 Some movies from, for example, a comedy genre, will contain music that will typically belong to an action genre, if there is for example, an exciting scene. So these are atypical tracks that have musical elements from a different genre. That’s why I will look at the mean of the tracks used in a movie.
 
 Timbral, rhythm and pitch will be different across these genres. I will use these fore genre classification. 
+
+Loudness: seen as a relevant musical feature to express emotions (Juslin & Laukka, 2004)
+Mode: major vs. minor. 
+* happy and tender: mainy major mode. Romantic movies have a lot of these characteristics
+* sadness and fear: mainly minor mode.
+* anger: even distribution
+link between valence and musical mode
+
+# Corpus
+Movies from the last decade
+Number of movies based on number of tracks
+Only Original Motion Picture Soundtrack albums from spotify
+
+Action movies (221 tracks)
+1)	Atomic blonde
+2)	Baby driver 
+3)	Edge of tomorrow
+4)	Fast five/furious 7
+5)	Hanna
+6)	John wick(s)
+7)	Kingsman: the secret service
+8)	Mad max: fury road
+9)	Mission impossible: fallout
+10)	Skyfall
+11) Avengers: end game
+
+Romantic movies (242 tracks)
+1)	Eternal sunshine of the spotless mind
+2)	Amélie
+3)	Barfi!
+4)	La la land
+5)	Slumdog millionaire 
+6)	Pride & prejudice
+7)	About time
+8)	The notebook
+9)	The fault in our stars
+10) Love actually
+11) Atonement
+12) Silver linings playbook
+13) The theory of everything
+14) The age of adaline
+
+Horror movies (237 tracks)
+1)	Get out
+2)	The lighthouse
+3)	A quiet place
+4)	The conjuring
+5)	Upgrade
+6)	Split
+7)	Hereditary
+8)	Doctor sleep
+9)	It
+
+file:///Users/irisgaarthuis/Documents/Minor%20Kunstmatige%20Intelligentie/Computational%20Musicology/Folder/index.html
+
+

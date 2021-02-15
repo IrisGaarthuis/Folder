@@ -1,13 +1,16 @@
 ---
 title: "Portfolio Computational Musicology"
 author: "Iris Gaarthuis"
-date: "10-2-2021"
+date: "2/15/2021"
 output: html_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 ```{r}
 library(tidyverse)
 ```
-
 ```{r}
 library(spotifyr)
 ```
@@ -75,4 +78,3 @@ genre %>%
   scale_x_continuous(breaks = c(0, 1)) +
   theme_classic()
 ```
-
