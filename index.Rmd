@@ -20,7 +20,7 @@ Mode: major vs. minor.
 * anger: even distribution
 link between valence and musical mode
 
-# Corpus
+## Corpus
 Movies from the last decade
 Number of movies based on number of tracks
 Only Original Motion Picture Soundtrack albums from spotify
@@ -64,7 +64,7 @@ Horror movies (237 tracks)
 7)	Hereditary
 8)	Doctor sleep
 9)	It
-
+---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
