@@ -4,6 +4,9 @@ author: "Iris Gaarthuis"
 date: "2/15/2021"
 output: html_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ## Computational Musicology
 
 Can I predict film genre, based on the film music playlist of different movies?
@@ -65,8 +68,6 @@ Horror movies (237 tracks)
 8)	Doctor sleep
 9)	It
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r}
 library(tidyverse)
