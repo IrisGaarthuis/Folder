@@ -3,7 +3,7 @@
 title: "Portfolio Computational Musicology"
 author: "Iris Gaarthuis"
 date: "10-2-2021"
-output: github_document
+output: html_document
 ---
 ```{r}
 library(tidyverse)
