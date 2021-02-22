@@ -2,142 +2,500 @@
 title: "Portfolio Computational Musicology"
 author: "Iris Gaarthuis"
 date: "2/15/2021"
-output: html_document
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
----
-## Computational Musicology
-
-Can I predict film genre, based on the film music playlist of different movies?
-In my analysis, I want to identify the measurable traits of the musical scores (different elements) of film music between different genres of movies. I chose this subject, because I thought it would be interesting to identify the different key elements of music used in different genres of movies, because the full emotional effect of a movie is mainly based on the music played (in combination with the visual information). These movies will be romance, comedy, horror and action. From these movie genres, what features contain the most information? For each genre, I’m going to analyze 5-10 movies with their corresponding tracks. Emotions are key elements in these movies. In romance movies, emotions like ‘loving’ en ‘sense of longing’ are the main characteristics, I expect that light tones are key features. In horror movies, fear and anxiety are the main emotions expressed in music. Dark overtones will be present. In action movies, emotions with high intensity like excitement are essential. In comedy movies, ‘happiness’ and ‘joy are the main emotions, so these tracks will contain a lot of musical elements from ‘happy’ music.
-
-Some movies from, for example, a comedy genre, will contain music that will typically belong to an action genre, if there is for example, an exciting scene. So these are atypical tracks that have musical elements from a different genre. That’s why I will look at the mean of the tracks used in a movie.
-
-Timbral, rhythm and pitch will be different across these genres. I will use these fore genre classification. 
-
-Loudness: seen as a relevant musical feature to express emotions (Juslin & Laukka, 2004)
-Mode: major vs. minor. 
-* happy and tender: mainy major mode. Romantic movies have a lot of these characteristics
-* sadness and fear: mainly minor mode.
-* anger: even distribution
-link between valence and musical mode
-
-## Corpus
-Movies from the last decade
-Number of movies based on number of tracks
-Only Original Motion Picture Soundtrack albums from spotify
-
-Action movies (221 tracks)
-1)	Atomic blonde
-2)	Baby driver 
-3)	Edge of tomorrow
-4)	Fast five/furious 7
-5)	Hanna
-6)	John wick(s)
-7)	Kingsman: the secret service
-8)	Mad max: fury road
-9)	Mission impossible: fallout
-10)	Skyfall
-11) Avengers: end game
-
-Romantic movies (242 tracks)
-1)	Eternal sunshine of the spotless mind
-2)	Amélie
-3)	Barfi!
-4)	La la land
-5)	Slumdog millionaire 
-6)	Pride & prejudice
-7)	About time
-8)	The notebook
-9)	The fault in our stars
-10) Love actually
-11) Atonement
-12) Silver linings playbook
-13) The theory of everything
-14) The age of adaline
-
-Horror movies (237 tracks)
-1)	Get out
-2)	The lighthouse
-3)	A quiet place
-4)	The conjuring
-5)	Upgrade
-6)	Split
-7)	Hereditary
-8)	Doctor sleep
-9)	It
----
-
-```{r}
 library(tidyverse)
-```
-```{r}
 library(spotifyr)
-```
+library(compmus)
+library(plotly)
+library(ggthemes)
+library(extrafont)
+library(dplyr)
 
-```{r}
-romantic_movies <- get_playlist_audio_features("","5mlaU10XgmCTkuqxJCX1bk")
+```
+### Background
+
+For my corpus, I chose 10-15 movies (from the last decade) for each movie genre, based on track-size. The primary genre label for each movie is based on information form the Internet Movie Database (IMDB).
+
+#### **Action**
+•	Atomic blonde
+•	Edge of tomorrow
+•	Fast five/furious 7
+•	Hanna
+•	John wick(s)
+•	Kingsman: the secret service
+•	Mad max: fury road
+•	Mission impossible: fallout
+•	Avengers: end game
+•	Tenet 
+•	X-Men
+•	Inception
+
+#### **Romance - Drama**
+•	Call me by your name
+•	Before midnight
+•	Eternal sunshine of the spotless mind
+•	Pride & prejudice
+•	The notebook
+•	The fault in our stars
+•	Atonement
+•	The theory of everything
+•	The age of Adaline
+•	Brokeback mountain
+•	The guernsey literary
+
+#### **Horror**
+•	Get out
+•	The lighthouse
+•	A quiet place
+•	The conjuring
+•	Upgrade
+•	Split
+•	Hereditary
+•	Doctor sleep
+•	IT
+
+#### **Comedy**
+•	The nice guys
+•	This is the end
+•	They came together
+•	Bridesmades
+•	Hunt for the wilderpeople
+•	The 40 year old virgin
+•	The big sick
+•	Scott pilgrim vs the world
+•	21 jump street
+•	The way, way back
+•	Girls trip
+•	Crazy rich Asians 
+•	American hustle
+•	Pitch perfect
+•	Wet hot American summer
+•	Napoleon dynamite
+
+### Can we predict movie genre based on just the film music?
+
+The full emotional effect of a movie is mainly based on the music played, in combination with the visual information. Typical movie genres are romance, comedy, horror and action. From these movie genres, what musical features contain the most information? Emotions are key elements in these movie genres. In romantic drama's, emotions like ‘loving’ en ‘sense of longing’ are the main characteristics, but also 'sadness'.In horror movies, fear and anxiety are the main emotions expressed in music. Dark overtones will be present. In action movies, emotions with high intensity like excitement are essential. In feelgood-comedy movies, ‘happiness’ and ‘joy' are the main emotions, so these tracks will contain a lot of musical elements from ‘happy’ music like major tones.
+
+#### **Expectations**
+A horror movie will be defined as a movie that seeks to scare or unsettle the audience. I expect that this music is mostly written in the minor key. Music in horror movies wobbles and sound deliberately out of tune. For example, a lot of *glissandi* on violins (the screening upward). Pitch will be destabilized and pitch drops are used to stress the 'unexpected'. One of the most iconic sounds, is the sudden *sforzando tutti* crash, designed to shock the audience instantly. It happens often in the midst of a musical silence, or after a pedal note.
+
+##### Key features:
+•	Atonality
+•	Pitch destabilization ('deformed' sounds)
+•	Spiky motif
+•	sforzando tutti and glissando
+•	Horror cue: E (flat) Minor
+•	Sudden silence
+•	Low valence
+
+Romantic dramas, generally, contain both 'loving feelings' and 'sadness', that is why this genre probably will oscillate between music written in both the major and minor key.  
+
+##### Key features:
+•	Slow pace
+•	Light tones
+•	Longline and lyrical melodies
+•	Medium valence: equal major and minor 
+•	Timbre: woodwind instruments, piano and harp
+
+The action movie offers thrills (e.g. shooting) and spectacle (e.g. explosions).
+
+##### Key features:
+•	Fast tempo
+•	High staccato
+•	High pitch repetition
+•	Timbre: brass and percussion instruments 
+•	Loud songs
+
+Comedy movies are overall very happy. Happy tunes are written in the major key, are louder than other genres and probably more danceable with a high valence.
+
+##### Key features:
+•	Constant major 
+•	High loudness and energy 
+•	High pitch repetition 
+•	Timbre: Piano, strings instruments, few harmonics  
+•	Loud songs 
+• High valence 
+
+(I am still not sure how to make move genre predictions of other movies than my corpus, this is more difficult than I thought it would be)
+
+```{r, echo=FALSE}
+romantic_movies <- get_playlist_audio_features("","5WF2NxUu7K56m7dRRJWSLc")
 horror_movies <- get_playlist_audio_features("", "12aylnVBIgblxtIVgofUiz")
 action_movies <- get_playlist_audio_features("", "6Ua5fW3fgV26Vu9b8SxBJA")
-```
-```{r}
+comedy_movies <- get_playlist_audio_features("", "0uyxeXStktT9wwVIRYqQS0")
+
 genre <-
   bind_rows(
-  romantic_movies %>% mutate(category = "romance"),
-  horror_movies %>% mutate(category = "horror"),
-  action_movies %>% mutate(category = "action")
+  romantic_movies %>% mutate(category = "Romance/Drama"),
+  horror_movies %>% mutate(category = "Horror"),
+  action_movies %>% mutate(category = "Action"),
+  comedy_movies %>% mutate(category = "Feelgood/Comedy")
   )
 ```
 
 
-```{r}
-genre %>%
-  ggplot(aes(x = valence)) +
-  geom_histogram(binwidth = 0.1, fill = "#0c4c8a") +
-  facet_wrap(~category) +
-  theme_classic()
-```
-```{r}
-genre %>%
-  ggplot(aes(x = instrumentalness)) +
-  geom_histogram(binwidth = 0.06, fill = "#0c4c8a") +
-  facet_wrap(~category) +
-  theme_classic()
-  
+### In what way does the film music from different movie genres differ, based on the emotional quadrant? [track-level-features]
+```{r, echo = FALSE}
+plot_valence_energy <- genre %>%                   
+  mutate(
+    mode = ifelse(mode == 0, "Minor", "Major")
+  ) %>%
+  ggplot(                   
+    aes(
+      x = valence,
+      y = energy,
+      size = loudness,
+      colour = mode
+    )
+  ) +
+  geom_point(alpha=  0.5) + 
+  geom_rug(size = 0.1) +     
+  geom_text(                 
+    aes(
+      x = valence,
+      y = energy,
+      label = label
+    ),
+    data = 
+      tibble(
+        label = "Doll box, The Conjuring",
+        category = "Horror",
+        valence = 0.8540,
+        energy = 0.06520
+      ),
+    color = "gray30",        
+    size = 1.5,                 
+    hjust = "left",          
+    vjust = "bottom",         
+    nudge_x = -0.05,          
+    nudge_y = 0.02            
+    ) +
+    geom_vline(
+    xintercept = 0.5, 
+    alpha = 0.4
+    ) +
+  geom_hline(
+    yintercept = 0.5, 
+    alpha = 0.4
+    ) +
+  facet_wrap(~category
+    ) +   
+  scale_x_continuous(         
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.5,0.75, 1), 
+    minor_breaks = NULL       
+  ) +
+  scale_y_continuous(         
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    minor_breaks = NULL
+  ) +
+  scale_size_continuous(     
+    trans = "exp",           
+    guide = "none"         
+  ) +
+    annotate(
+    'text', 0.15 / 2, 0.99, 
+    label = "Angry / Turbulent",
+    size = 2
+    ) +
+  annotate(
+    'text', 1.85 / 2, 0.99, 
+    label = "Happy / Joyful",
+    size = 2
+    ) +
+  annotate(
+    'text', 1.85 / 2, 0.01, 
+    label = "Peace / Chill",
+    size = 2
+    ) +
+  annotate(
+    'text', 0.15 / 2, 0.01, 
+    label = "Depressing / Sad",
+    size = 2
+    ) +
+  theme_light() +             
+  labs(                      
+    x = "Valence",
+    y = "Energy",
+    colour = "Mode",
+    title = "Emotional quadrant movie genres"
+  )
+
+ggplotly(plot_valence_energy)
 ```
 
-```{r}
+***
+This graphic shows the emotional quadrant of tracks played in movies from movie genres horror, action, feelgood-comedy and romance/drama. There is a clear distinction of the horror and action genres, where the tracks are mainly displayed on very low valence values. The tracks from horror movies are in the depressing / sad section of the emotional quadrant graph, with a lot of minor songs and are overall very 'quiet'. Tracks from action movies are more smeared out, but locate mainly in the angry / turbulent and depressing / sad sections of the graph. Surprisingly, the majority of these tracks do not seem to be very loud at all. Feelgood-comedy tracks are more scattered, but in comparison with the other genres, this genre has a lot of tracks in the happy / joyful section with more louder songs. The tracks of romantic drama's are localized throughout the whole plot, but do have a low valence overall. Louder songs have bigger dots, and color represents the mode of the song.
+
+
+
+```{r, include = FALSE}
+histo_valence <- genre %>%
+  ggplot(aes(x=valence, fill = category)) +
+  geom_histogram(position = "dodge", binwidth = 0.09) +
+  theme_classic() 
+
+ggplotly(histo_valence)
+```
+
+```{r, include=FALSE}
+# Plot emotional quadrant of movie genres
+
+plot_valence_energy_eachtrack <- genre %>%
+  ggplot(
+    aes(
+      x = valence, 
+      y = energy, 
+      color = category,
+      )
+    ) +
+  geom_jitter(
+   # size = mode, 
+    size = 0.8,
+    alpha = 0.6
+    ) +
+  geom_vline(
+    xintercept = 0.5, 
+    alpha = 0.4
+    ) +
+  geom_hline(
+    yintercept = 0.5, 
+    alpha = 0.4) +
+  scale_x_continuous(
+    expand = c(0, 0), 
+    limits = c(-0.02, 1)
+    ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    limits = c(-0.02, 1)
+  ) +
+  geom_text(
+    aes(x = valence,
+        y = energy,
+        label = label
+    ),
+  data =
+    tibble(
+      label = "Doll box, The Conjuring",
+      valence = 0.8540,
+      energy = 0.06520
+ 
+    ),
+    color = "gray30",
+    size = 3,
+    hjust = "left",
+    vjust = "bottom",
+    nudge_x = -0.05,
+    nudge_y = 0.02
+      ) +
+  annotate(
+    'text', 
+           x = c(0.152, 0.054, 0.456, 0.283), 
+           y = c(0.404, 0.206, 0.556, 0.261),
+           label = c("Mean action", 
+                     "Mean horror", 
+                     "Mean comedy", 
+                     "Mean romance"), 
+           color = c("#FF9D00", "#50AA99", "#91A94E", "purple"),
+    ) +
+  annotate(
+    'text', 0.25 / 2, 0.97, 
+    label = "Angry / Turbulent"
+    ) +
+  annotate(
+    'text', 1.75 / 2, 0.97, 
+    label = "Happy / Joyful"
+    ) +
+  annotate(
+    'text', 1.75 / 2, 0.03, 
+    label = "Peace / Chill"
+    ) +
+  annotate(
+    'text', 0.25 / 2, 0.03, 
+    label = "Depressing / Sad"
+    ) +
+  labs(
+    x = "Valence", 
+    y = "Energy",
+    title = "Emotional quadrant movie genres", subtitle = "Based on energy and valence"
+    )
+  
+plot_valence_energy_eachtrack <- plot_valence_energy_eachtrack +
+  theme_minimal()
+
+ggplotly(plot_valence_energy_eachtrack)
+```
+
+```{r, include = FALSE}
+# comedy vs romance
+comedy_romance <-
+  bind_rows(
+    romantic_movies %>% mutate(category = "Romance"),
+    comedy_movies %>% mutate(category = "Feelgood comedy")
+  )
+horror_action <-
+  bind_rows(
+    horror_movies %>% mutate(category = "Horror"),
+    action_movies %>% mutate(category = "Action")
+  )
+
+valence_comedy_romance <- comedy_romance %>%
+  ggplot(aes(x = valence)) +
+  geom_histogram(binwidth = 0.07, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_classic()
+
+ggplotly(valence_comedy_romance)
+```
+
+
+```{r, include = FALSE}
+# horror vs action
+valence_horror_action <- horror_action %>%
+  ggplot(aes(x = loudness)) +
+  geom_histogram(binwidth = 0.5, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_classic()
+
+ggplotly(valence_horror_action)
+```
+
+
+```{r, include = FALSE}
+valence_energy_romance <- romantic_movies %>%
+  summarize(mean_valence = mean(valence),
+            mean_energy = mean(energy),
+            )
+
+valence_energy_comedy <- comedy_movies %>%
+  summarize(mean_valence = mean(valence),
+            mean_energy = mean(energy),
+            )
+
+valence_energy_action <- action_movies %>%
+  summarize(mean_valence = mean(valence),
+            mean_energy = mean(energy),
+            )
+
+valence_energy_horror <- horror_movies %>%
+  summarize(mean_valence = mean(valence),
+            mean_energy = mean(energy),
+            )
+```
+
+
+```{r include = FALSE}
+# minor vs major
+genre %>%
+  ggplot(aes(x = mode, fill = category)) +  # 0 = minor, 1 = major
+  geom_bar(position = "dodge") +
+  scale_x_continuous(breaks = c(0, 1)) +
+  theme_minimal()
+
+```
+
+
+```{r, include = FALSE}
+valence_energy_horror <- comedy_movies %>%
+  ggplot(aes(x = valence, y = energy, color = track.album.name)) +
+  geom_jitter(size = 1) +
+  geom_vline(xintercept = 0.5, alpha = 0.4) +
+  geom_hline(yintercept = 0.5, alpha = 0.4) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(-0.01, 1)) +
+  annotate('text', 0.22 / 2, 0.94, label = "Angry / Turbulent") +
+  annotate('text', 1.75 / 2, 0.94, label = "Happy / Joyful") +
+  annotate('text', 1.75 / 2, 0.03, label = "Peaceful / Chill") +
+  annotate('text', 0.22 / 2, 0.03, label = "Depressing / Sad") +
+  labs(x = "Valence", y = "Energy (Arousal)") +
+  ggtitle("Emotional quadrant horror movies", "Based on energy y valence")
+
+valence_energy_horror + 
+  theme(
+    legend.position ="bottom",
+    legend.text = element_text(size = 4))
+  
+ggplotly(valence_energy_horror)
+```
+
+### Analaysis of one outlier [chroma-features] 
+```{r, echo = FALSE}
+doll_box <-
+  get_tidy_audio_analysis("3A1INcX1DDc1J4eYHi8Ahb")%>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+    
+doll_box %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+
+teacup_tv <-
+  get_tidy_audio_analysis("0arwvUW9ZHGU6hi7Q1iJsT")%>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+    
+teacup_tv %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+```
+
+***
+
+Doll box (upper) is different than the majority of the horror film music. It has a relatively high valence for horror film music and is compared with teacup TV (lower), which has a very low valence. Doll box is written in major, with very high pitched, distinctive tones. This chord is the G#major(9) chord. The chromagram of teacup TV is more smeared out, because a lot of different tones are played at the same time, as well as very high and very low pitched sounds, throughout the whole track. This track is played in a minor key and sounds a bit out of tune.
+
+
+```{r, include = FALSE}
+genre %>%
+  ggplot(aes(x = tempo)) +
+  geom_histogram(binwidth = 12, fill = "#0c4c8a") +
+  facet_wrap(~category) +
+  theme_classic()
+
 genre %>%
   ggplot(aes(x = danceability)) +
   geom_histogram(binwidth = 0.05, fill = "#0c4c8a") +
   facet_wrap(~category) +
   theme_classic()
-```
-
-```{r}
-genre %>%
-  ggplot(aes(x = valence, y = energy, color = category)) +
-  geom_point(alpha = 0.5) +
-  scale_x_log10() +
-  theme_bw()
   
 ```
 
 
+### Conclusion and Discussion
 
-```{r}
-genre %>%
-  ggplot(aes(x=valence, fill = category)) +
-  geom_histogram(position = "dodge", binwidth = 0.08) +
-  theme_classic()
-```
-```{r}
-genre %>%
-  ggplot(aes(x = mode, fill = category)) +  # 0 = minor, 1 = major
-  geom_bar(position = "dodge") +
-  scale_x_continuous(breaks = c(0, 1)) +
-  theme_classic()
-```
+The results support the notion that high intensity movies like action and horror, have musical cues that are measurably different from the scores of movies with more measured expression of emotion, like comedy and romance.
