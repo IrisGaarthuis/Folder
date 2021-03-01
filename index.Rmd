@@ -1,11 +1,12 @@
 ---
-title: "Portfolio Computational Musicology"
+title: "Film music portfolio"
 author: "Iris Gaarthuis"
 date: "2/15/2021"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
-    code_folding: hide
+    #code_folding: hide
+    theme: flatly
 ---
 
 ```{r setup, include=FALSE}
@@ -19,12 +20,243 @@ library(extrafont)
 library(dplyr)
 
 ```
-### Background
 
-For my corpus, I chose 10-15 movies (from the last decade) for each movie genre, based on track-size. The primary genre label for each movie is based on information form the Internet Movie Database (IMDB).
+### The differences between an outlier and a typical track from horror film music 
+```{r, echo = FALSE}
+doll_box <-
+  get_tidy_audio_analysis("3A1INcX1DDc1J4eYHi8Ahb")%>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
 
-#### **Action**
-•	Atomic blonde
+# curse your name
+curse_your_name <-
+  get_tidy_audio_analysis("0q91IEUXZO2Ijl1Z2EwQZs") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+
+bind_rows(
+  doll_box %>%
+    mutate(pitches = map(pitches, compmus_normalise, "euclidean"), type = "Doll Box") %>%
+    compmus_gather_chroma(),
+  curse_your_name %>%
+    mutate(pitches = map(pitches, compmus_normalise, "euclidean"), type = "Curse Your Name") %>%
+    compmus_gather_chroma()
+) %>%
+  mutate() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  facet_wrap(~type, scales = "free") +
+  labs(x = "Time (s)", 
+       y = NULL,
+       fill = "Magnitude",
+       title = "") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+```
+
+***
+
+Based on the difference in valence and the similarity in energy, two tracks (Doll Box and Curse Your Name) are being compared. Doll box is different than the majority of the horror film music. It has a relatively high valence (0.854) for horror film music and is compared with Curse Your name, which is a very typical horror track with an extremely low valence (0.021). The energy values are more or less the same (0.0625 and 0.0725). Doll box is written in a major key, with very high pitched, distinctive tones. This chord is the G#major(9) chord. The chromagram of Curse Your Name is more smeared out, because a lot of different tones are played at the same time, as well as very high and very low pitched sounds, throughout the whole track. This track is played in a minor key and sounds a bit out of tune. This is very typical for horror film music, because a lot of tones are played at the same time, even if they do not sound harmonically 'correct' to the human ear.
+
+### The differences of **timbral components** of an outlier and a typical track in horror film-music [Cepstrograms]
+```{r, echo = FALSE}
+
+doll_box <-
+  get_tidy_audio_analysis("3A1INcX1DDc1J4eYHi8Ahb") %>%
+  compmus_align(bars, segments) %>%                     # Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+# cepstrogram curse your name
+curse_your_name <-
+  get_tidy_audio_analysis("0q91IEUXZO2Ijl1Z2EwQZs") %>%
+  compmus_align(bars, segments) %>%                     #   Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+bind_rows(
+  doll_box %>%
+    compmus_gather_timbre() %>%
+    mutate(type = "Doll Box"),
+  curse_your_name %>%
+    compmus_gather_timbre() %>%
+    mutate(type = "Curse Your Name")
+) %>%
+  mutate() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  facet_wrap(~type, scales = "free") +
+  labs(x = "", 
+       y = "",
+       title = "Cepstrograms") +
+  scale_fill_viridis_c() +
+  theme_classic()
+
+
+```
+
+***
+
+(I still have to fix the compressed look, but I didn't succeed).
+
+From the graph of Doll Box, it is very clear which timbre components are being used in this track; c02, c03 and c04. The sound of this track represents the typical sound of a doll music box. Because these three components are very constant throughout the whole track, it is hard to distinguish the different sound characteristics. Two clear spots in this cepstrogram, are the very contrasting parts at t = 1 and at t = 32. These parts are riffs on a copper xylophone.
+
+As you can see, the timbral components of Curse Your Name are much more spread out in the cepstrogram. This is very typical in horror music, because horror music tends to have a lot of different musical characteristics/instruments played at the same time, that seeks to give the audience an uncomfortable and unsettling feeling. The first bright yellow part of co2 is very distinguishable in this track. It represents a wind-instrument, probably a trumpet. Immediately after this part, a somewhat longer c01 appears. This part is a very low-pitched string-instrument, it sounds like a string bass. The yellow part of c05 is a very sharp sound, a high-pitched flute which is very unpleasant to the ear. It is clear that both very high- and low pitched sounds are being used at the same time in typical horror music.
+
+When comparing c03 in both tracks: this sound is in both tracks a very high-pitched instrument, however, in doll house this sound is made by a percussion instrument. In Curse Your Name, this sound sounds more like a wind instrument.
+
+
+### Self-similarity marices of a horror outlier [Chroma and Timbre]
+```{r, echo = FALSE}
+doll_box <-
+  get_tidy_audio_analysis("3A1INcX1DDc1J4eYHi8Ahb") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms"
+      )
+  )
+bind_rows(
+  doll_box %>%
+    compmus_self_similarity(pitches, "cosine") %>%
+    mutate(d = d / max(d), type = "Chroma"),
+  doll_box %>%
+    compmus_self_similarity(timbre, "cosine") %>%
+    mutate(d = d / max(d), type = "Timbre")
+) %>%
+  mutate() %>%
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", 
+       y = "",
+       title = "Self-Similarity Matrices of 'Doll Box'")
+```
+
+***
+
+The self-similarity matrix of timbre is very constant throughout the track, but there are two sections that stand out, at t = 1 and t = 32. As you may have noticed, these time segments correspond to the segments of the cepstrogram of the the previous page. This means that these represent the same riffs. 
+
+(I couldn't adapt the 'bars' to smaller segments, I tried a lot of combinations but unfortunately it didn't work. That's why the matrices are a bit pixelated).
+
+
+### Can we predict movie genre based on just the film music?
+
+The full emotional effect of a movie is mainly based on the music played, in combination with the visual information. Typical movie genres are romance, comedy, horror and action. From these movie genres, what musical features contain the most information? Emotions are key elements in these movie genres. In romantic dramas, emotions like ‘loving’ en ‘sense of longing’ are the main characteristics, but also 'sadness'. In horror movies, fear and anxiety are the main emotions expressed in music. Dark overtones will be present. In action movies, emotions with high intensity like excitement are essential. In feelgood-comedy movies, ‘happiness’ and ‘joy' are the main emotions, so these tracks will contain a lot of musical elements from ‘happy’ music like major tones.
+ 
+The corpus covers a presentable selection of typical movies within the four movie genres. This selection is based on the movie genre categorization of the Internet Movie Database (IMDB). Movies within a IMDB genre with typical features from the other genres were excluded, as well as 'dialogue' tracks from the spotify albums. The romatic-drama playlist contains 331 tracks (11 movies), the feelgood-comedy playlist contains 235 tracks (16 movies), the horror playlist has 237 tracks (9 movies) and the action playlist has a total of 223 tracks (12 movies). Only spotify albums from the 'Official Motion Picture Soundtrack' were selected.
+ 
+#### **Expectations**
+A **horror movie** will be defined as a movie that seeks to scare or unsettle the audience. I expect that this music is mostly written in the minor key. Music in horror movies wobbles and sound deliberately out of tune. For example, a lot of *glissandi* on violins (the screening upward). Pitch will be destabilized and pitch drops are used to stress the 'unexpected'. One of the most iconic sounds, is the sudden *sforzando tutti* crash, designed to shock the audience instantly. It happens often in the midst of a musical silence, or after a pedal note.
+ 
+##### Key features:
+* Atonality
+* Pitch destabilization ('deformed' sounds)
+* Spiky motif
+* sforzando tutti and glissando
+* Horror cue: E (flat) Minor
+* Sudden silence
+* Low valence
+ 
+**Romantic dramas**, generally, contain both 'loving feelings' and 'sadness', that is why this genre probably will oscillate between music written in both the major and minor key.  
+ 
+##### Key features:
+* Slow pace
+* Light tones
+* Longline and lyrical melodies
+* Medium valence: equal major and minor 
+* Timbre: woodwind instruments, piano and harp
+ 
+The **action movie** offers thrills (e.g. shooting) and spectacle (e.g. explosions).
+ 
+##### Key features:
+* Fast tempo
+* High staccato
+* High pitch repetition
+* Timbre: brass and percussion instruments 
+* Loud songs
+ 
+**Comedy movies** are overall very happy. Happy tunes are written in the major key, are louder than other genres and probably more danceable with a high valence.
+ 
+##### Key features:
+* Constant major 
+* High loudness and energy 
+* High pitch repetition 
+* Timbre: Piano, strings instruments, few harmonics  
+* Loud songs 
+* High valence 
+ 
+(I am still not sure how to make move genre predictions of other movies than my corpus, this is more difficult than I thought it would be)
+ 
+#### **The Corpus**
+##### **Action**
+* Atomic blonde
 •	Edge of tomorrow
 •	Fast five/furious 7
 •	Hanna
@@ -36,9 +268,9 @@ For my corpus, I chose 10-15 movies (from the last decade) for each movie genre,
 •	Tenet 
 •	X-Men
 •	Inception
-
-#### **Romance - Drama**
-•	Call me by your name
+ 
+##### **Romance-Drama**
+* Call me by your name
 •	Before midnight
 •	Eternal sunshine of the spotless mind
 •	Pride & prejudice
@@ -49,9 +281,9 @@ For my corpus, I chose 10-15 movies (from the last decade) for each movie genre,
 •	The age of Adaline
 •	Brokeback mountain
 •	The guernsey literary
-
-#### **Horror**
-•	Get out
+ 
+##### **Horror**
+* Get out
 •	The lighthouse
 •	A quiet place
 •	The conjuring
@@ -60,9 +292,9 @@ For my corpus, I chose 10-15 movies (from the last decade) for each movie genre,
 •	Hereditary
 •	Doctor sleep
 •	IT
-
-#### **Comedy**
-•	The nice guys
+ 
+##### **Feelgood-Comedy**
+* The nice guys
 •	This is the end
 •	They came together
 •	Bridesmades
@@ -78,52 +310,6 @@ For my corpus, I chose 10-15 movies (from the last decade) for each movie genre,
 •	Pitch perfect
 •	Wet hot American summer
 •	Napoleon dynamite
-
-### Can we predict movie genre based on just the film music?
-
-The full emotional effect of a movie is mainly based on the music played, in combination with the visual information. Typical movie genres are romance, comedy, horror and action. From these movie genres, what musical features contain the most information? Emotions are key elements in these movie genres. In romantic drama's, emotions like ‘loving’ en ‘sense of longing’ are the main characteristics, but also 'sadness'.In horror movies, fear and anxiety are the main emotions expressed in music. Dark overtones will be present. In action movies, emotions with high intensity like excitement are essential. In feelgood-comedy movies, ‘happiness’ and ‘joy' are the main emotions, so these tracks will contain a lot of musical elements from ‘happy’ music like major tones.
-
-#### **Expectations**
-A horror movie will be defined as a movie that seeks to scare or unsettle the audience. I expect that this music is mostly written in the minor key. Music in horror movies wobbles and sound deliberately out of tune. For example, a lot of *glissandi* on violins (the screening upward). Pitch will be destabilized and pitch drops are used to stress the 'unexpected'. One of the most iconic sounds, is the sudden *sforzando tutti* crash, designed to shock the audience instantly. It happens often in the midst of a musical silence, or after a pedal note.
-
-##### Key features:
-•	Atonality
-•	Pitch destabilization ('deformed' sounds)
-•	Spiky motif
-•	sforzando tutti and glissando
-•	Horror cue: E (flat) Minor
-•	Sudden silence
-•	Low valence
-
-Romantic dramas, generally, contain both 'loving feelings' and 'sadness', that is why this genre probably will oscillate between music written in both the major and minor key.  
-
-##### Key features:
-•	Slow pace
-•	Light tones
-•	Longline and lyrical melodies
-•	Medium valence: equal major and minor 
-•	Timbre: woodwind instruments, piano and harp
-
-The action movie offers thrills (e.g. shooting) and spectacle (e.g. explosions).
-
-##### Key features:
-•	Fast tempo
-•	High staccato
-•	High pitch repetition
-•	Timbre: brass and percussion instruments 
-•	Loud songs
-
-Comedy movies are overall very happy. Happy tunes are written in the major key, are louder than other genres and probably more danceable with a high valence.
-
-##### Key features:
-•	Constant major 
-•	High loudness and energy 
-•	High pitch repetition 
-•	Timbre: Piano, strings instruments, few harmonics  
-•	Loud songs 
-• High valence 
-
-(I am still not sure how to make move genre predictions of other movies than my corpus, this is more difficult than I thought it would be)
 
 ```{r, echo=FALSE}
 romantic_movies <- get_playlist_audio_features("","5WF2NxUu7K56m7dRRJWSLc")
@@ -141,9 +327,10 @@ genre <-
 ```
 
 
-### In what way does the film music from different movie genres differ, based on the emotional quadrant? [track-level-features]
+### In what way does the **film music** from different movie genres **differ**, based on the **emotional quadrant**? [track-level-features]
 ```{r, echo = FALSE}
-plot_valence_energy <- genre %>%                   
+plot_valence_energy <- genre %>%
+  group_by((track.name)) %>%
   mutate(
     mode = ifelse(mode == 0, "Minor", "Major")
   ) %>%
@@ -165,16 +352,16 @@ plot_valence_energy <- genre %>%
     ),
     data = 
       tibble(
-        label = "Doll box, The Conjuring",
-        category = "Horror",
-        valence = 0.8540,
-        energy = 0.06520
+        label = c("Doll Box, The Conjuring","Curse Your Name / The Lighthouse"),
+        category = c("Horror", "Horror"),
+        valence = c(0.854, 0.021),
+        energy = c(0.0652, 0.0725)
       ),
     color = "gray30",        
     size = 1.5,                 
-    hjust = "left",          
+    hjust = "right",          
     vjust = "bottom",         
-    nudge_x = -0.05,          
+    nudge_x = 0.05,          
     nudge_y = 0.02            
     ) +
     geom_vline(
@@ -233,100 +420,58 @@ ggplotly(plot_valence_energy)
 ```
 
 ***
+
 This graphic shows the emotional quadrant of tracks played in movies from movie genres horror, action, feelgood-comedy and romance/drama. There is a clear distinction of the horror and action genres, where the tracks are mainly displayed on very low valence values. The tracks from horror movies are in the depressing / sad section of the emotional quadrant graph, with a lot of minor songs and are overall very 'quiet'. Tracks from action movies are more smeared out, but locate mainly in the angry / turbulent and depressing / sad sections of the graph. Surprisingly, the majority of these tracks do not seem to be very loud at all. Feelgood-comedy tracks are more scattered, but in comparison with the other genres, this genre has a lot of tracks in the happy / joyful section with more louder songs. The tracks of romantic drama's are localized throughout the whole plot, but do have a low valence overall. Louder songs have bigger dots, and color represents the mode of the song.
 
 
-
 ```{r, include = FALSE}
-histo_valence <- genre %>%
-  ggplot(aes(x=valence, fill = category)) +
-  geom_histogram(position = "dodge", binwidth = 0.09) +
-  theme_classic() 
-
-ggplotly(histo_valence)
-```
-
-```{r include = FALSE}
-# minor vs major
-genre %>%
-  ggplot(aes(x = mode, fill = category)) +  # 0 = minor, 1 = major
-  geom_bar(position = "dodge") +
-  scale_x_continuous(breaks = c(0, 1)) +
-  theme_minimal()
-
-```
-
-
-### Analaysis of one outlier [chroma-features] 
-```{r, echo = FALSE}
-doll_box <-
-  get_tidy_audio_analysis("3A1INcX1DDc1J4eYHi8Ahb")%>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-    
-doll_box %>%
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
-  compmus_gather_chroma() %>% 
+# self-similarity matrices curse your name
+curse_your_name <-
+  get_tidy_audio_analysis("0q91IEUXZO2Ijl1Z2EwQZs") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "manhattan"
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms"
+      )
+  )
+bind_rows(
+  curse_your_name %>%
+    compmus_self_similarity(pitches, "aitchison") %>%
+    mutate(d = d / max(d), type = "Chroma"),
+  curse_your_name %>%
+    compmus_self_similarity(timbre, "euclidean") %>%
+    mutate(d = d / max(d), type = "Timbre")
+) %>%
+  mutate() %>%
   ggplot(
     aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
     )
   ) +
   geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
-
-teacup_tv <-
-  get_tidy_audio_analysis("0arwvUW9ZHGU6hi7Q1iJsT")%>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-    
-teacup_tv %>%
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
-  compmus_gather_chroma() %>% 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", 
+       y = "",
+       title = "Self-Similarity Matrices of 'Curse Your Name'")
 ```
-
-***
-
-Doll box (upper) is different than the majority of the horror film music. It has a relatively high valence for horror film music and is compared with teacup TV (lower), which has a very low valence. Doll box is written in major, with very high pitched, distinctive tones. This chord is the G#major(9) chord. The chromagram of teacup TV is more smeared out, because a lot of different tones are played at the same time, as well as very high and very low pitched sounds, throughout the whole track. This track is played in a minor key and sounds a bit out of tune.
-
-
-```{r, include = FALSE}
-genre %>%
-  ggplot(aes(x = tempo)) +
-  geom_histogram(binwidth = 12, fill = "#0c4c8a") +
-  facet_wrap(~category) +
-  theme_classic()
-
-genre %>%
-  ggplot(aes(x = danceability)) +
-  geom_histogram(binwidth = 0.05, fill = "#0c4c8a") +
-  facet_wrap(~category) +
-  theme_classic()
-  
-```
-
-
 ### Conclusion and Discussion
 
 The results support the notion that high intensity movies like action and horror, have musical cues that are measurably different from the scores of movies with more measured expression of emotion, like comedy and romance.
