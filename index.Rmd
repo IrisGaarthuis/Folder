@@ -21,6 +21,72 @@ library(dplyr)
 
 ```
 
+```{r, echo = FALSE}
+horror <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "12aylnVBIgblxtIVgofUiz"
+  ) %>%
+  slice(1:30) %>%
+  add_audio_analysis()
+comedy <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "0uyxeXStktT9wwVIRYqQS0"
+  ) %>%
+  slice(1:30) %>%
+  add_audio_analysis()
+romance <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "5mlaU10XgmCTkuqxJCX1bk"
+  ) %>%
+  slice(1:30) %>%
+  add_audio_analysis()
+action <-
+  get_playlist_audio_features(
+    "thesoundsofspotify",
+    "6Ua5fW3fgV26Vu9b8SxBJA"
+  ) %>%
+  slice(1:30) %>%
+  add_audio_analysis()
+
+film_music <-
+  bind_rows(comedy %>% mutate(genre = "Feelgood-Comedy"),
+            romance %>% mutate(genre = "Drama-Romance"),
+            horror %>% mutate(genre = "Horror"),
+            action %>% mutate(genre = "Action"))
+```
+
+### The mean differences of timbre coefficients of different movie genres
+```{r, echo = FALSE}
+film_music %>%
+  mutate(
+    timbre =
+      map(
+        segments,
+        compmus_summarise,
+        timbre,
+        method = "mean"
+      )
+  ) %>%
+  select(genre, timbre) %>%
+  compmus_gather_timbre() %>%
+  ggplot(aes(x = basis, y = value, colour = genre)) +
+  geom_violin() +
+  expand_limits(x = c()) +
+  scale_fill_viridis_d() +
+  scale_x_discrete(expand = expansion(add = .6)) +
+  #facet_wrap(~genre) +
+  labs(x = "Spotify Timbre Coefficients", y = "", fill = "Genre")
+```
+
+***
+
+Timbre, also known as "tone color", is the perceived sound quality of a musical note or sound. It distinguishes various types of musical instruments. There are twelve timbre coefficients in total, the values are high level abstractions of the spectral surface ordered by degree of importance. The first coefficient represents the 'average loudness', the second points out 'brightness', the third is more closely related to the flatness of a sound and the fourth to sounds with a stronger attack. Increased levels of mid and high frequency content are referred to as 'brighter'. A high flatness indicates that the spectrum has a similar amount of power in all spectral bands (i.e. similar to white noise) and low flatness indicates a "spiky" spectrum (mixture of sine waves). When comparing the twelve Spotify timbre coefficients between the four movie genres, the main difference lies in the second and third coefficient.
+For c02, horror music really differs from the other genres. It seems that the range is way more in the positive area. This is probably due to the use of stringed instruments in horror music.
+
+
 ### The differences between an outlier and a typical track from horror film music 
 ```{r, echo = FALSE}
 doll_box <-
@@ -54,7 +120,7 @@ bind_rows(
     )
   ) +
   geom_tile() +
-  facet_wrap(~type, scales = "free") +
+  facet_wrap(~type, scales = "free_x") +
   labs(x = "Time (s)", 
        y = NULL,
        fill = "Magnitude",
@@ -129,7 +195,7 @@ bind_rows(
     )
   ) +
   geom_tile() +
-  facet_wrap(~type, scales = "free") +
+  facet_wrap(~type, scales = "free_x") +
   labs(x = "", 
        y = "",
        title = "Cepstrograms") +
@@ -200,6 +266,7 @@ bind_rows(
 ```
 
 ***
+The visualisation on the left represents a self-similarity matrix for 'chroma'. In this graphic, the x and y axes both represent the song 'Doll Box', an outlier from the horror film music playlist. It demonstrates at which points in the track the same pitches occur. The right visualisation represents the same song, but with 'timbre', also referred to as 'tone color'.
 
 The self-similarity matrix of timbre is very constant throughout the track, but there are two sections that stand out, at t = 1 and t = 32. As you may have noticed, these time segments correspond to the segments of the cepstrogram of the the previous page. This means that these represent the same riffs. 
 
@@ -424,54 +491,8 @@ ggplotly(plot_valence_energy)
 This graphic shows the emotional quadrant of tracks played in movies from movie genres horror, action, feelgood-comedy and romance/drama. There is a clear distinction of the horror and action genres, where the tracks are mainly displayed on very low valence values. The tracks from horror movies are in the depressing / sad section of the emotional quadrant graph, with a lot of minor songs and are overall very 'quiet'. Tracks from action movies are more smeared out, but locate mainly in the angry / turbulent and depressing / sad sections of the graph. Surprisingly, the majority of these tracks do not seem to be very loud at all. Feelgood-comedy tracks are more scattered, but in comparison with the other genres, this genre has a lot of tracks in the happy / joyful section with more louder songs. The tracks of romantic drama's are localized throughout the whole plot, but do have a low valence overall. Louder songs have bigger dots, and color represents the mode of the song.
 
 
-```{r, include = FALSE}
-# self-similarity matrices curse your name
-curse_your_name <-
-  get_tidy_audio_analysis("0q91IEUXZO2Ijl1Z2EwQZs") %>%
-  compmus_align(bars, segments) %>%
-  select(bars) %>%
-  unnest(bars) %>%
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms", norm = "manhattan"
-      )
-  ) %>%
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms"
-      )
-  )
-bind_rows(
-  curse_your_name %>%
-    compmus_self_similarity(pitches, "aitchison") %>%
-    mutate(d = d / max(d), type = "Chroma"),
-  curse_your_name %>%
-    compmus_self_similarity(timbre, "euclidean") %>%
-    mutate(d = d / max(d), type = "Timbre")
-) %>%
-  mutate() %>%
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_fixed() +
-  facet_wrap(~type) +
-  scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(x = "", 
-       y = "",
-       title = "Self-Similarity Matrices of 'Curse Your Name'")
-```
+
+
 ### Conclusion and Discussion
 
 The results support the notion that high intensity movies like action and horror, have musical cues that are measurably different from the scores of movies with more measured expression of emotion, like comedy and romance.
