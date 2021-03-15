@@ -1,0 +1,25 @@
+
+.navbar {
+  background-color: #719374;
+  border-color: none;
+  
+}
+
+.navbar :hover {
+  background-color: #719374;
+}
+
+.storyboard-nav .sbframelist ul li.active {
+  background-image: url("https://i.pinimg.com/564x/c6/1f/01/c61f0120bcd978b99dbe46131a4a73a6.jpg"); linear-gradient(#719374, #019bd7);
+  background-size: 100% 100%;
+}
+
+.storyboard-nav .sbframelist ul li:hover {
+  background-image: url("https://i.pinimg.com/564x/c6/1f/01/c61f0120bcd978b99dbe46131a4a73a6.jpg"), linear-gradient(#719374, #019bd7);
+  color: white;
+}
+
+.storyboard-nav .sbframelist ul li:hover {
+  background-image: url("https://i.pinimg.com/564x/c6/1f/01/c61f0120bcd978b99dbe46131a4a73a6.jpg"), linear-gradient(#719374, #019bd7);
+  color: white;
+}

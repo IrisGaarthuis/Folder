@@ -5,10 +5,9 @@ date: "2/15/2021"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
-    #code_folding: hide
-    theme: flatly
+    theme: "default"
+    css: styles.css
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -18,8 +17,82 @@ library(plotly)
 library(ggthemes)
 library(extrafont)
 library(dplyr)
+library(crosstalk)
+
 
 ```
+
+```{r, echo=FALSE}
+romantic_movies <- get_playlist_audio_features("","5WF2NxUu7K56m7dRRJWSLc") %>%
+   filter(!(tempo == 0))
+horror_movies <- get_playlist_audio_features("", "12aylnVBIgblxtIVgofUiz") %>%
+   filter(!(tempo == 0))
+action_movies <- get_playlist_audio_features("", "6Ua5fW3fgV26Vu9b8SxBJA") %>%
+   filter(!(tempo == 0))
+comedy_movies <- get_playlist_audio_features("", "0uyxeXStktT9wwVIRYqQS0") %>%
+  filter(!(tempo == 0))
+
+
+genre <-
+  bind_rows(
+  romantic_movies %>% mutate(category = "Romance/Drama"),
+  horror_movies %>% mutate(category = "Horror"),
+  action_movies %>% mutate(category = "Action"),
+  comedy_movies %>% mutate(category = "Feelgood/Comedy")
+  )
+
+```
+
+### **NEW** Histogram of tempi 
+```{r, echo = FALSE}
+tempi <- genre %>%
+  mutate(mode = ifelse(mode == 0, "Minor", "Major")) %>%
+  ggplot(aes(x = tempo, fill = mode)) +
+  geom_histogram(position = "dodge", binwidth = 7) +
+  facet_wrap(~category) +
+  theme_light() +
+  labs(
+    title = "Histogram of tempi for movie genres",
+    fill = "Mode",
+    x = "Tempo (BPM)")
+
+tempi
+
+```
+
+***
+
+On average, feelgood/comedy movies have a higher BPM than the other three genres (+/- 120 BPM). The average BPM for horror movies is the lowest (around 90 BPM). The distribution for romance/drama and action is about the same. 
+It is also clear that overall, songs in minor key do have a slightly lower BPM than major-key songs, especially in action movies.
+
+### Histogram of keys
+```{r, echo = FALSE}
+keys <- genre %>%
+  mutate(mode = ifelse(mode == 0, "Minor", "Major")) %>%
+  ggplot(aes(x = key, fill = as.factor(mode))) +
+  geom_bar(position = "stack") +
+  facet_wrap(~category) +
+  theme_light() +
+  labs(
+    title = "Histogram of keys for movie genres",
+    fill = "Mode",
+    y = "Count",
+    x = "Key"
+  ) +
+  scale_x_discrete(limits = c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"),
+                   labels = c("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"),
+                   expand = c(0,0))
+
+keys
+
+```
+
+*** 
+(change x-axis labels)
+A clear distinction between horror & action and romance/drama & feelgood/comedy: the first two genres contain a lot of tracks in the C#-key. However, the other two genres do not contain as many C#-key tracks.
+
+Horror: G#-key.
+
 
 ```{r, echo = FALSE}
 horror <-
@@ -27,28 +100,28 @@ horror <-
     "thesoundsofspotify",
     "12aylnVBIgblxtIVgofUiz"
   ) %>%
-  slice(1:30) %>%
+  slice(1:100) %>%
   add_audio_analysis()
 comedy <-
   get_playlist_audio_features(
     "thesoundsofspotify",
     "0uyxeXStktT9wwVIRYqQS0"
   ) %>%
-  slice(1:30) %>%
+  slice(1:100) %>%
   add_audio_analysis()
 romance <-
   get_playlist_audio_features(
     "thesoundsofspotify",
     "5mlaU10XgmCTkuqxJCX1bk"
   ) %>%
-  slice(1:30) %>%
+  slice(1:100) %>%
   add_audio_analysis()
 action <-
   get_playlist_audio_features(
     "thesoundsofspotify",
     "6Ua5fW3fgV26Vu9b8SxBJA"
   ) %>%
-  slice(1:30) %>%
+  slice(1:100) %>%
   add_audio_analysis()
 
 film_music <-
@@ -78,13 +151,25 @@ film_music %>%
   scale_fill_viridis_d() +
   scale_x_discrete(expand = expansion(add = .6)) +
   #facet_wrap(~genre) +
-  labs(x = "Spotify Timbre Coefficients", y = "", fill = "Genre")
+  labs(x = "Spotify Timbre Coefficients", 
+       y = "", 
+       fill = "Genre",
+       title = "Timbre Coefficients")
 ```
 
 ***
 
 Timbre, also known as "tone color", is the perceived sound quality of a musical note or sound. It distinguishes various types of musical instruments. There are twelve timbre coefficients in total, the values are high level abstractions of the spectral surface ordered by degree of importance. The first coefficient represents the 'average loudness', the second points out 'brightness', the third is more closely related to the flatness of a sound and the fourth to sounds with a stronger attack. Increased levels of mid and high frequency content are referred to as 'brighter'. A high flatness indicates that the spectrum has a similar amount of power in all spectral bands (i.e. similar to white noise) and low flatness indicates a "spiky" spectrum (mixture of sine waves). When comparing the twelve Spotify timbre coefficients between the four movie genres, the main difference lies in the second and third coefficient.
 For c02, horror music really differs from the other genres. It seems that the range is way more in the positive area. This is probably due to the use of stringed instruments in horror music.
+
+```{r, include = FALSE}
+# minor vs major
+keys <- ggplot(genre, aes(key, fill = category)) +
+  geom_bar(position = "fill") +
+  ylab("Proportion")
+
+ggplotly(keys)
+```
 
 
 ### The differences between an outlier and a typical track from horror film music 
@@ -206,8 +291,6 @@ bind_rows(
 ```
 
 ***
-
-(I still have to fix the compressed look, but I didn't succeed).
 
 From the graph of Doll Box, it is very clear which timbre components are being used in this track; c02, c03 and c04. The sound of this track represents the typical sound of a doll music box. Because these three components are very constant throughout the whole track, it is hard to distinguish the different sound characteristics. Two clear spots in this cepstrogram, are the very contrasting parts at t = 1 and at t = 32. These parts are riffs on a copper xylophone.
 
@@ -339,7 +422,6 @@ The **action movie** offers thrills (e.g. shooting) and spectacle (e.g. explosio
 ##### **Romance-Drama**
 * Call me by your name
 •	Before midnight
-•	Eternal sunshine of the spotless mind
 •	Pride & prejudice
 •	The notebook
 •	The fault in our stars
@@ -348,6 +430,7 @@ The **action movie** offers thrills (e.g. shooting) and spectacle (e.g. explosio
 •	The age of Adaline
 •	Brokeback mountain
 •	The guernsey literary
+• After we collided
  
 ##### **Horror**
 * Get out
@@ -378,38 +461,34 @@ The **action movie** offers thrills (e.g. shooting) and spectacle (e.g. explosio
 •	Wet hot American summer
 •	Napoleon dynamite
 
-```{r, echo=FALSE}
-romantic_movies <- get_playlist_audio_features("","5WF2NxUu7K56m7dRRJWSLc")
-horror_movies <- get_playlist_audio_features("", "12aylnVBIgblxtIVgofUiz")
-action_movies <- get_playlist_audio_features("", "6Ua5fW3fgV26Vu9b8SxBJA")
-comedy_movies <- get_playlist_audio_features("", "0uyxeXStktT9wwVIRYqQS0")
-
-genre <-
-  bind_rows(
-  romantic_movies %>% mutate(category = "Romance/Drama"),
-  horror_movies %>% mutate(category = "Horror"),
-  action_movies %>% mutate(category = "Action"),
-  comedy_movies %>% mutate(category = "Feelgood/Comedy")
-  )
-```
-
-
 ### In what way does the **film music** from different movie genres **differ**, based on the **emotional quadrant**? [track-level-features]
+
 ```{r, echo = FALSE}
-plot_valence_energy <- genre %>%
-  group_by((track.name)) %>%
-  mutate(
-    mode = ifelse(mode == 0, "Minor", "Major")
-  ) %>%
-  ggplot(                   
-    aes(
+  
+shared_genre <- SharedData$new(genre)
+
+slider <- filter_slider(id = "valence", label = "Valence", sharedData = shared_genre, "Valence", column = ~valence, step = 1)
+
+checkbox1 <- filter_checkbox(id = "track.album.name", label = "Movie", sharedData = shared_genre, group = ~track.album.name, inline = TRUE)
+
+checkbox2<- filter_checkbox(id = "category", label = "Genre", sharedData = shared_genre, group = ~category, inline = TRUE)
+
+#checkbox3 <- filter_checkbox(id = "track.album.name", label = "Horror", sharedData = shared_genre, group = ~horror_movies)
+
+#  mutate(
+ #   mode = ifelse(mode == 0, "Minor", "Major")
+#  ) %>%
+ p1 <- ggplot(shared_genre, 
+             aes(
       x = valence,
       y = energy,
       size = loudness,
-      colour = mode
+      #fill = category,
+      color = as.factor(mode),
+      label = track.album.name
     )
   ) +
-  geom_point(alpha=  0.5) + 
+  geom_point(alpha = 0.45) + 
   geom_rug(size = 0.1) +     
   geom_text(                 
     aes(
@@ -431,16 +510,14 @@ plot_valence_energy <- genre %>%
     nudge_x = 0.05,          
     nudge_y = 0.02            
     ) +
-    geom_vline(
-    xintercept = 0.5, 
-    alpha = 0.4
+    geom_vline(alpha = 0.4,
+    aes(xintercept = 0.5)
     ) +
-  geom_hline(
-    yintercept = 0.5, 
-    alpha = 0.4
+  geom_hline(alpha = 0.4, aes(
+    yintercept = 0.5)
     ) +
-  facet_wrap(~category
-    ) +   
+  #facet_wrap(~category
+  #  ) +   
   scale_x_continuous(         
     limits = c(0, 1),
     breaks = c(0, 0.25, 0.5,0.75, 1), 
@@ -455,41 +532,36 @@ plot_valence_energy <- genre %>%
     trans = "exp",           
     guide = "none"         
   ) +
-    annotate(
-    'text', 0.15 / 2, 0.99, 
-    label = "Angry / Turbulent",
-    size = 2
-    ) +
-  annotate(
-    'text', 1.85 / 2, 0.99, 
-    label = "Happy / Joyful",
-    size = 2
-    ) +
-  annotate(
-    'text', 1.85 / 2, 0.01, 
-    label = "Peace / Chill",
-    size = 2
-    ) +
-  annotate(
-    'text', 0.15 / 2, 0.01, 
-    label = "Depressing / Sad",
-    size = 2
-    ) +
   theme_light() +             
   labs(                      
     x = "Valence",
     y = "Energy",
     colour = "Mode",
-    title = "Emotional quadrant movie genres"
+    title = "Emotional Quadrant of Four Movie Genres"
   )
 
-ggplotly(plot_valence_energy)
+anno <- list(
+    x = c(0.15/2, 1.85/2, 1.85/2, 0.15/2), 
+    y = c(0.99, 0.99, 0.01, 0.01), 
+    text = c("Angry/Turbulent", "Happy/Joyful", "Peace/Chill", "Depressing/Sad"), 
+    xref = "x", 
+    yref = "y", 
+    showarrow = FALSE, 
+    size = 2)
+
+p1_1 <- ggplotly(p1)
+
+p1_1 %>%
+  layout(annotations = anno)
+
 ```
+
+***
+`r bscols(list(slider, checkbox2, checkbox1))`
 
 ***
 
 This graphic shows the emotional quadrant of tracks played in movies from movie genres horror, action, feelgood-comedy and romance/drama. There is a clear distinction of the horror and action genres, where the tracks are mainly displayed on very low valence values. The tracks from horror movies are in the depressing / sad section of the emotional quadrant graph, with a lot of minor songs and are overall very 'quiet'. Tracks from action movies are more smeared out, but locate mainly in the angry / turbulent and depressing / sad sections of the graph. Surprisingly, the majority of these tracks do not seem to be very loud at all. Feelgood-comedy tracks are more scattered, but in comparison with the other genres, this genre has a lot of tracks in the happy / joyful section with more louder songs. The tracks of romantic drama's are localized throughout the whole plot, but do have a low valence overall. Louder songs have bigger dots, and color represents the mode of the song.
-
 
 
 
